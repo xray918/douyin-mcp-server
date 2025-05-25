@@ -11,7 +11,7 @@
 - 🎧 自动提取视频音频
 - 📝 使用AI语音识别提取文本内容
 - 🧹 自动清理中间临时文件
-- 🔧 支持自定义API配置
+- 🔧 支持自定义API配置, API 默认使用 [SiliconFlow API](https://cloud.siliconflow.cn/i/TxUlXG3u)
 
 ## 安装
 
