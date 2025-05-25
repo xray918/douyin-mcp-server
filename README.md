@@ -85,7 +85,7 @@ parse_douyin_video_info("https://v.douyin.com/xxx")
 
 ### 默认配置
 
-服务器默认使用 SiliconFlow API：
+服务器默认使用 [SiliconFlow API](https://cloud.siliconflow.cn/i/TxUlXG3u)：
 - API URL: `https://api.siliconflow.cn/v1/audio/transcriptions`
 - 模型: `FunAudioLLM/SenseVoiceSmall`
 
