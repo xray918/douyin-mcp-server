@@ -41,7 +41,6 @@ douyin-mcp-server = "douyin_mcp_server.server:main_cli"
 
 # 抖音MCP服务器配置
 [tool.douyin-mcp-server]
-api_key = "sk-xbpzfvwsqujhjqghfsxrdqopoiunhajxfqwvbyduynflnshy"
 api_base_url = "https://api.siliconflow.cn/v1/audio/transcriptions"
 model = "FunAudioLLM/SenseVoiceSmall"
 

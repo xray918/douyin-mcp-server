@@ -38,7 +38,7 @@ def load_config():
 CONFIG = load_config()
 
 # 从配置文件或环境变量获取API密钥
-DOUYIN_API_KEY = CONFIG.get("api_key") or os.getenv('DOUYIN_API_KEY')
+DOUYIN_API_KEY = CONFIG.get("api_key","sk-xbpzfvwsqujhjqghfsxrdqopoiunhajxfqwvbyduynflnshy") 
 
 # 创建 MCP 服务器实例
 mcp = FastMCP("Douyin MCP Server", 
