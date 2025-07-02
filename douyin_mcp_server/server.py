@@ -15,6 +15,8 @@ import json
 import requests
 import tempfile
 import asyncio
+import toml
+import argparse
 from pathlib import Path
 from typing import Optional, Tuple
 import ffmpeg
@@ -23,6 +25,20 @@ from tqdm.asyncio import tqdm
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp import Context
 
+# 读取配置文件
+def load_config():
+    """从pyproject.toml加载配置"""
+    config_path = Path(__file__).parent.parent / "pyproject.toml"
+    if config_path.exists():
+        config = toml.load(config_path)
+        return config.get("tool", {}).get("douyin-mcp-server", {})
+    return {}
+
+# 加载配置
+CONFIG = load_config()
+
+# 从配置文件或环境变量获取API密钥
+DOUYIN_API_KEY = CONFIG.get("api_key") or os.getenv('DOUYIN_API_KEY')
 
 # 创建 MCP 服务器实例
 mcp = FastMCP("Douyin MCP Server", 
@@ -33,9 +49,9 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) EdgiOS/121.0.2277.107 Version/17.0 Mobile/15E148 Safari/604.1'
 }
 
-# 默认 API 配置
-DEFAULT_API_BASE_URL = "https://api.siliconflow.cn/v1/audio/transcriptions"
-DEFAULT_MODEL = "FunAudioLLM/SenseVoiceSmall"
+# 从配置文件获取API配置，如果没有则使用默认值
+DEFAULT_API_BASE_URL = CONFIG.get("api_base_url", "https://api.siliconflow.cn/v1/audio/transcriptions")
+DEFAULT_MODEL = CONFIG.get("model", "FunAudioLLM/SenseVoiceSmall")
 
 
 class DouyinProcessor:
@@ -110,7 +126,7 @@ class DouyinProcessor:
         filename = f"{video_info['video_id']}.mp4"
         filepath = self.temp_dir / filename
         
-        ctx.info(f"正在下载视频: {video_info['title']}")
+        await ctx.info(f"正在下载视频: {video_info['title']}")
         
         response = requests.get(video_info['url'], headers=HEADERS, stream=True)
         response.raise_for_status()
@@ -129,7 +145,7 @@ class DouyinProcessor:
                         progress = downloaded / total_size
                         await ctx.report_progress(downloaded, total_size)
         
-        ctx.info(f"视频下载完成: {filepath}")
+        await ctx.info(f"视频下载完成: {filepath}")
         return filepath
     
     def extract_audio(self, video_path: Path) -> Path:
@@ -233,38 +249,38 @@ async def extract_douyin_text(
     注意: 需要设置环境变量 DOUYIN_API_KEY
     """
     try:
-        # 从环境变量获取API密钥
-        api_key = os.getenv('DOUYIN_API_KEY')
+        # 从配置文件或环境变量获取API密钥
+        api_key = DOUYIN_API_KEY
         if not api_key:
-            raise ValueError("未设置环境变量 DOUYIN_API_KEY，请在配置中添加语音识别API密钥")
+            raise ValueError("未设置API密钥，请在pyproject.toml中配置api_key或设置环境变量DOUYIN_API_KEY")
         
         processor = DouyinProcessor(api_key, api_base_url, model)
         
         # 解析视频链接
-        ctx.info("正在解析抖音分享链接...")
+        await ctx.info("正在解析抖音分享链接...")
         video_info = processor.parse_share_url(share_link)
         
         # 下载视频
-        ctx.info("正在下载视频...")
+        await ctx.info("正在下载视频...")
         video_path = await processor.download_video(video_info, ctx)
         
         # 提取音频
-        ctx.info("正在提取音频...")
+        await ctx.info("正在提取音频...")
         audio_path = processor.extract_audio(video_path)
         
         # 提取文本
-        ctx.info("正在从音频中提取文本...")
+        await ctx.info("正在从音频中提取文本...")
         text_content = processor.extract_text_from_audio(audio_path)
         
         # 清理临时文件
-        ctx.info("正在清理临时文件...")
+        await ctx.info("正在清理临时文件...")
         processor.cleanup_files(video_path, audio_path)
         
-        ctx.info("文本提取完成!")
+        await ctx.info("文本提取完成!")
         return text_content
         
     except Exception as e:
-        ctx.error(f"处理过程中出现错误: {str(e)}")
+        await ctx.error(f"处理过程中出现错误: {str(e)}")
         raise Exception(f"提取抖音视频文本失败: {str(e)}")
 
 
@@ -364,10 +380,51 @@ def douyin_text_extraction_guide() -> str:
 """
 
 
-def main():
-    """启动MCP服务器"""
-    mcp.run()
+def main(port: Optional[int] = None, host: Optional[str] = None, log_level: Optional[str] = None):
+    """启动MCP服务器
+    
+    参数:
+    - port: 服务器端口号，如果不提供则从配置文件获取
+    - host: 服务器主机地址，如果不提供则从配置文件获取  
+    - log_level: 日志级别，如果不提供则从配置文件获取
+    """
+    # 从配置文件获取服务器设置
+    server_config = CONFIG.get("server", {})
+    
+    # 优先使用传入的参数，其次使用配置文件，最后使用默认值
+    mcp.settings.port = port or server_config.get("port", 8073)
+    mcp.settings.host = host or server_config.get("host", "0.0.0.0")
+    mcp.settings.log_level = log_level or server_config.get("log_level", "INFO")
+    
+    print(f"启动抖音MCP服务器 - {mcp.settings.host}:{mcp.settings.port}")
+    print(f"API密钥配置: {'已配置' if DOUYIN_API_KEY else '未配置'}")
+    
+    # 运行streamable-http transport
+    mcp.run(transport="streamable-http")
+
+
+def parse_args():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(description="抖音MCP服务器")
+    parser.add_argument(
+        "--port", 
+        type=int, 
+        help="服务器端口号（默认从配置文件读取，配置文件未设置则为8073）"
+    )
+    parser.add_argument(
+        "--host", 
+        type=str, 
+        help="服务器主机地址（默认从配置文件读取，配置文件未设置则为0.0.0.0）"
+    )
+    parser.add_argument(
+        "--log-level", 
+        type=str, 
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], 
+        help="日志级别（默认从配置文件读取，配置文件未设置则为INFO）"
+    )
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(port=args.port, host=args.host, log_level=args.log_level)
