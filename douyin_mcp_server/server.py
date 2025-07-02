@@ -425,6 +425,11 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main_cli():
+    """命令行入口点函数，用于处理命令行参数"""
     args = parse_args()
     main(port=args.port, host=args.host, log_level=args.log_level)
+
+
+if __name__ == "__main__":
+    main_cli()

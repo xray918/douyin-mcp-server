@@ -37,7 +37,7 @@ Repository = "https://github.com/yzfly/douyin-mcp-server"
 Issues = "https://github.com/yzfly/douyin-mcp-server/issues"
 
 [project.scripts]
-douyin-mcp-server = "douyin_mcp_server.server:main"
+douyin-mcp-server = "douyin_mcp_server.server:main_cli"
 
 # 抖音MCP服务器配置
 [tool.douyin-mcp-server]
@@ -46,7 +46,4 @@ api_base_url = "https://api.siliconflow.cn/v1/audio/transcriptions"
 model = "FunAudioLLM/SenseVoiceSmall"
 
 # 服务器配置
-[tool.douyin-mcp-server.server]
-host = "0.0.0.0"
-port = 8073
-log_level = "INFO"
+
