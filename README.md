@@ -1,5 +1,6 @@
 # 抖音无水印视频文本提取 MCP 服务器
 
+[![smithery badge](https://smithery.ai/badge/@xray918/douyin-mcp-server)](https://smithery.ai/server/@xray918/douyin-mcp-server)
 [![PyPI version](https://badge.fury.io/py/douyin-mcp-server.svg)](https://badge.fury.io/py/douyin-mcp-server)
 [![Python version](https://img.shields.io/pypi/pyversions/douyin-mcp-server.svg)](https://pypi.org/project/douyin-mcp-server/)
 
@@ -25,6 +26,14 @@ uvx douyin-mcp-server
 
 ```bash
 pip install douyin-mcp-server
+```
+
+### 使用 Smithery 安装
+
+可以通过 [Smithery](https://smithery.ai/server/@xray918/douyin-mcp-server) 安装 douyin-mcp-server，以自动配合 Claude Desktop 使用：
+
+```bash
+npx -y @smithery/cli install @xray918/douyin-mcp-server --client claude
 ```
 
 ## 使用方法
