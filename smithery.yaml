@@ -1,0 +1,16 @@
+# Smithery configuration file: https://smithery.ai/docs/build/project-config
+
+startCommand:
+  type: http
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - douyinApiKey
+    properties:
+      douyinApiKey:
+        type: string
+        description: SiliconFlow or other API key for audio transcription
+    description: Configuration for Douyin MCP Server
+  exampleConfig:
+    douyinApiKey: sk-your-api-key-here
